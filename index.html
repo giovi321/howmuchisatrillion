@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How Much Is a Trillion?</title>
+  <meta name="description" content="One scroll from one million to one trillion. Your brain is lying to you about big numbers — this page fixes that." />
+  <meta property="og:title" content="How Much Is a Trillion?" />
+  <meta property="og:description" content="Every dot is a million euros. There are a million of them. Scroll." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="theme-color" content="#06060c" />
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;500;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <canvas id="gl" aria-hidden="true"></canvas>
+
+  <main id="content">
+
+    <!-- 0 · HERO -->
+    <section class="scene" id="hero">
+      <div class="scene-inner">
+        <p class="kicker mono">a scroll-powered sense of scale</p>
+        <h1 class="hero-title">
+          <span class="hero-line">HOW MUCH</span>
+          <span class="hero-line">IS A</span>
+          <span class="hero-line accent">TRILLION?</span>
+        </h1>
+        <p class="hero-sub">Your brain is lying to you about big numbers.<br />Scroll, and it will stop.</p>
+        <div class="scroll-cue" aria-hidden="true"><span></span></div>
+      </div>
+    </section>
+
+    <!-- 1 · THE GUESS -->
+    <section class="scene" id="guess">
+      <div class="scene-inner">
+        <div class="guess-wrap">
+          <p class="step-label mono">first, a test</p>
+          <h2 class="scene-title">Tap where <em>one billion</em> belongs.</h2>
+          <div class="numberline" id="numberline">
+            <div class="nl-track"></div>
+            <div class="nl-end nl-left"><span class="mono">€1</span><span class="nl-word">MILLION</span></div>
+            <div class="nl-end nl-right"><span class="mono">€1</span><span class="nl-word">TRILLION</span></div>
+            <div class="nl-marker nl-guess" id="nlGuess"><span class="mono">your guess</span></div>
+            <div class="nl-marker nl-truth" id="nlTruth"><span class="mono">€1 billion</span></div>
+          </div>
+          <p class="guess-hint mono" id="guessHint">tap the line · or just keep scrolling</p>
+          <div class="guess-verdict" id="guessVerdict">
+            <p class="verdict-big" id="verdictBig"></p>
+            <p class="verdict-small" id="verdictSmall">A billion sits 0.1% of the way from a million to a trillion. Most people put it near the middle. Keep scrolling to see why everyone gets this wrong.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 · ONE MILLION -->
+    <section class="scene gl-scene" id="million">
+      <div class="scene-inner">
+        <div class="counter-hud">
+          <p class="hud-label mono">dots on screen</p>
+          <p class="hud-count mono" id="countMillion">1</p>
+          <p class="hud-eq mono">× €1,000,000 each</p>
+        </div>
+        <div class="caption cap-bottom" data-cap="m1">
+          <h2 class="scene-title">This is <span class="accent">one million euros.</span></h2>
+          <p>One dot. In €100 notes it weighs 10&nbsp;kg — it fits in a backpack.<br />Earning the median European salary, it takes about 25 years.</p>
+        </div>
+        <div class="caption cap-bottom" data-cap="m2">
+          <p>A million is big. You can picture it.<br /><strong>That's the last time on this page that your intuition works.</strong></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · ONE BILLION -->
+    <section class="scene gl-scene" id="billion">
+      <div class="scene-inner">
+        <div class="counter-hud">
+          <p class="hud-label mono">dots on screen</p>
+          <p class="hud-count mono" id="countBillion">1</p>
+          <p class="hud-eq mono">× €1,000,000 each</p>
+        </div>
+        <div class="caption cap-bottom" data-cap="b1">
+          <h2 class="scene-title">This is <span class="gold">one billion.</span></h2>
+          <p><strong>One thousand</strong> dots of a million each.</p>
+        </div>
+        <div class="caption cap-bottom" data-cap="b2">
+          <p>Spending €1,000 a day, a billion lasts <strong>2,740 years</strong>.<br />Earning the median salary, it takes <strong>25,000 years</strong> of work.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 · ONE TRILLION -->
+    <section class="scene gl-scene" id="trillion">
+      <div class="scene-inner">
+        <div class="counter-hud">
+          <p class="hud-label mono">dots on screen</p>
+          <p class="hud-count mono" id="countTrillion">1,000</p>
+          <p class="hud-eq mono">× €1,000,000 each</p>
+        </div>
+        <div class="billion-tag mono" id="billionTag"><span class="tag-ring"></span><span class="tag-label">the billion you just saw</span></div>
+        <div class="caption cap-bottom" data-cap="t1">
+          <h2 class="scene-title">This is <span class="accent">one trillion.</span></h2>
+          <p><strong>One million</strong> dots. Every single dot is a million euros.</p>
+        </div>
+        <div class="caption cap-bottom" data-cap="t2">
+          <p>Find the billion. It's that golden speck —<br /><strong>a rounding error in the galaxy.</strong></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 · SECONDS -->
+    <section class="scene gl-scene" id="seconds">
+      <div class="scene-inner">
+        <div class="caption cap-top" data-cap="s0">
+          <h2 class="scene-title">Still feels abstract?<br />Count it in <span class="accent">seconds.</span></h2>
+        </div>
+        <div class="time-hud">
+          <p class="hud-label mono" id="secondsLabel">1,000,000 seconds ago</p>
+          <p class="time-date" id="timeDate">today</p>
+          <p class="time-note mono" id="timeNote"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 · PENNIES -->
+    <section class="scene gl-scene" id="pennies">
+      <div class="scene-inner">
+        <div class="caption cap-top" data-cap="p0">
+          <h2 class="scene-title">Now stack <span class="gold">cents.</span></h2>
+          <p>One 1-cent coin at a time. The stack never falls. Up we go.</p>
+        </div>
+        <div class="alt-hud">
+          <p class="hud-label mono">altitude</p>
+          <p class="hud-count mono" id="altReadout">0 m</p>
+          <p class="hud-eq mono" id="altPennies">0 coins</p>
+        </div>
+        <div class="milestone mono" id="milestone"></div>
+      </div>
+    </section>
+
+    <!-- 7 · SPEND IT -->
+    <section class="scene" id="spend">
+      <div class="scene-inner">
+        <div class="spend-wrap">
+          <p class="step-label mono">one last try</p>
+          <h2 class="scene-title">Spend <span class="accent">€1,000 every day.</span><br />No days off.</h2>
+          <div class="spend-cards">
+            <div class="spend-card" data-spend="1">
+              <p class="spend-amt mono">€1,000,000</p>
+              <p class="spend-time">gone in <strong>2.7 years</strong></p>
+              <p class="spend-note">before your next phone dies</p>
+            </div>
+            <div class="spend-card" data-spend="2">
+              <p class="spend-amt mono gold">€1,000,000,000</p>
+              <p class="spend-time">lasts <strong>2,740 years</strong></p>
+              <p class="spend-note">start before the Great Wall of China, still spending today</p>
+            </div>
+            <div class="spend-card" data-spend="3">
+              <p class="spend-amt mono accent">€1,000,000,000,000</p>
+              <p class="spend-time">lasts <strong>2.7 million years</strong></p>
+              <p class="spend-note">longer than our species has existed</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 · FINALE -->
+    <section class="scene gl-scene" id="finale">
+      <div class="scene-inner">
+        <div class="caption cap-center" data-cap="f1">
+          <h2 class="scene-title xl">A billion is a<br /><span class="gold">rounding error</span><br />on a trillion.</h2>
+        </div>
+        <div class="finale-line" id="finaleLine">
+          <div class="fl-track"></div>
+          <div class="fl-tick fl-m mono">€1M</div>
+          <div class="fl-tick fl-b mono gold">€1B</div>
+          <div class="fl-tick fl-t mono accent">€1T</div>
+          <div class="fl-tick fl-you mono" id="flYou">your guess</div>
+        </div>
+        <div class="finale-cta">
+          <a class="btn" href="./why.html">Why your brain does this →</a>
+          <button class="btn btn-ghost" id="shareBtn" type="button">Copy link</button>
+        </div>
+      </div>
+    </section>
+
+    <footer id="footer">
+      <p class="mono">Numbers: ECB 1-cent coin specs (1.67&nbsp;mm) · Earth–Moon distance 384,400&nbsp;km · Eurostat median earnings.</p>
+      <p class="mono">Inspired by the WSJ's “Trillions Game” interactive &amp; Landy et&nbsp;al. (2013), <em>Estimating Large Numbers</em>.</p>
+      <p class="mono dim">On small devices the trillion field renders a representative subset of the million dots. <a href="./why.html">Read the full explanation</a>.</p>
+      <p class="mono dim">Released under the <a href="https://www.wtfpl.net/" rel="license noopener" target="_blank">WTFPL</a> license.</p>
+    </footer>
+
+  </main>
+
+  <div id="loader" aria-hidden="true"><span class="mono">counting…</span></div>
+
+  <script type="module" src="./src/main.js"></script>
+  <script data-goatcounter="https://howmuchisatrillion.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</body>
+</html>
