@@ -29,7 +29,7 @@ const end = new Date();
 const start = new Date(end);
 start.setUTCDate(start.getUTCDate() - (DAYS - 1));
 
-const url = `${SITE}/api/v0/stats/total?start=${ymd(start)}&end=${ymd(end)}&group=day`;
+const url = `${SITE}/api/v0/stats/total?start=${ymd(start)}&end=${ymd(end)}`;
 const res = await fetch(url, {
   headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
 });
