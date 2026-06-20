@@ -52,9 +52,9 @@ const total = days.reduce((a, b) => a + b.value, 0);
 const peak = Math.max(1, ...days.map((d) => d.value));
 const last = days[days.length - 1].value;
 
-// geometry
-const W = 820, H = 200;
-const pad = { t: 16, r: 16, b: 26, l: 16 };
+// geometry — extra top room so the title clears the top gridline
+const W = 820, H = 210;
+const pad = { t: 34, r: 16, b: 26, l: 16 };
 const iw = W - pad.l - pad.r;
 const ih = H - pad.t - pad.b;
 const x = (i) => pad.l + (i / (days.length - 1)) * iw;
@@ -84,6 +84,7 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" 
     </linearGradient>
   </defs>
   <rect width="${W}" height="${H}" rx="10" fill="${C.paper}"/>
+  <text x="${pad.l}" y="18" fill="${C.muted}" font-size="11" letter-spacing="0.04em">howmuchisatrillion.com site visits</text>
   ${grid}
   <path d="${area}" fill="url(#fill)"/>
   <path d="${line}" fill="none" stroke="${C.accent}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
