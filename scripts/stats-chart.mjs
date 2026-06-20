@@ -76,6 +76,14 @@ const grid = [0, 0.5, 1].map((f) => {
 const lastX = x(days.length - 1), lastY = y(last);
 const fmtDate = (s) => new Date(s + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 
+// evenly spaced date ticks along the x-axis (edges anchored inward so they don't clip)
+const TICKS = 6;
+const xticks = Array.from({ length: TICKS }, (_, k) => {
+  const i = Math.round((k / (TICKS - 1)) * (days.length - 1));
+  const anchor = k === 0 ? 'start' : k === TICKS - 1 ? 'end' : 'middle';
+  return `<text x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="${anchor}" fill="${C.muted}" font-size="11">${fmtDate(days[i].day)}</text>`;
+}).join('');
+
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="'Geist Mono',ui-monospace,monospace" role="img" aria-label="Visits over the last ${DAYS} days: ${total.toLocaleString('en-US')} total">
   <defs>
     <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
@@ -89,8 +97,7 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" 
   <path d="${area}" fill="url(#fill)"/>
   <path d="${line}" fill="none" stroke="${C.accent}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
   <circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="3.5" fill="${C.ink}"/>
-  <text x="${pad.l}" y="${(H - 8)}" fill="${C.muted}" font-size="11">${fmtDate(days[0].day)}</text>
-  <text x="${(W - pad.r).toFixed(1)}" y="${(H - 8)}" text-anchor="end" fill="${C.muted}" font-size="11">${fmtDate(days[days.length - 1].day)}</text>
+  ${xticks}
 </svg>
 `;
 
