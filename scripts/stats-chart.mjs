@@ -9,11 +9,10 @@ const SITE = 'https://howmuchisatrillion.goatcounter.com';
 const DAYS = 90;
 const OUT = 'assets/visits.svg';
 
-// cosmic-dark palette, matching src/style.css
+// dark palette from the diagram-design plugin (assets/template-dark.html)
 const C = {
-  bg: '#06060c', glow: '#0d0d20', ink: '#f1f6f2',
-  dim: '#8d97a3', green: '#00e676', gold: '#ffd54f',
-  grid: 'rgba(241,246,242,0.10)',
+  paper: '#1c1a17', ink: '#f1efe7', muted: '#a8a69d', accent: '#ff6a30',
+  grid: 'rgba(241,239,231,0.10)',
 };
 
 const token = process.env.GOATCOUNTER_API_TOKEN;
@@ -54,8 +53,8 @@ const peak = Math.max(1, ...days.map((d) => d.value));
 const last = days[days.length - 1].value;
 
 // geometry
-const W = 820, H = 220;
-const pad = { t: 30, r: 16, b: 26, l: 16 };
+const W = 820, H = 200;
+const pad = { t: 16, r: 16, b: 26, l: 16 };
 const iw = W - pad.l - pad.r;
 const ih = H - pad.t - pad.b;
 const x = (i) => pad.l + (i / (days.length - 1)) * iw;
@@ -71,32 +70,26 @@ const grid = [0, 0.5, 1].map((f) => {
   const gy = pad.t + ih - f * ih;
   const val = Math.round(f * peak).toLocaleString('en-US');
   return `<line x1="${pad.l}" y1="${gy.toFixed(1)}" x2="${(W - pad.r).toFixed(1)}" y2="${gy.toFixed(1)}" stroke="${C.grid}"/>` +
-    `<text x="${(W - pad.r).toFixed(1)}" y="${(gy - 4).toFixed(1)}" text-anchor="end" fill="${C.dim}" font-size="11">${val}</text>`;
+    `<text x="${(W - pad.r).toFixed(1)}" y="${(gy - 4).toFixed(1)}" text-anchor="end" fill="${C.muted}" font-size="11">${val}</text>`;
 }).join('');
 
 const lastX = x(days.length - 1), lastY = y(last);
 const fmtDate = (s) => new Date(s + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="'IBM Plex Mono',ui-monospace,monospace" role="img" aria-label="Visits over the last ${DAYS} days: ${total.toLocaleString('en-US')} total">
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="'Geist Mono',ui-monospace,monospace" role="img" aria-label="Visits over the last ${DAYS} days: ${total.toLocaleString('en-US')} total">
   <defs>
-    <radialGradient id="bg" cx="50%" cy="0%" r="120%">
-      <stop offset="0%" stop-color="${C.glow}"/>
-      <stop offset="55%" stop-color="${C.bg}"/>
-    </radialGradient>
     <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="${C.green}" stop-opacity="0.35"/>
-      <stop offset="100%" stop-color="${C.green}" stop-opacity="0"/>
+      <stop offset="0%" stop-color="${C.accent}" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="${C.accent}" stop-opacity="0"/>
     </linearGradient>
   </defs>
-  <rect width="${W}" height="${H}" rx="10" fill="url(#bg)"/>
-  <text x="${pad.l}" y="20" fill="${C.ink}" font-size="13" font-weight="600">Visits — last ${DAYS} days</text>
-  <text x="${(W - pad.r).toFixed(1)}" y="20" text-anchor="end" fill="${C.green}" font-size="13" font-weight="600">${total.toLocaleString('en-US')} total</text>
+  <rect width="${W}" height="${H}" rx="10" fill="${C.paper}"/>
   ${grid}
   <path d="${area}" fill="url(#fill)"/>
-  <path d="${line}" fill="none" stroke="${C.green}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="3.5" fill="${C.gold}"/>
-  <text x="${pad.l}" y="${(H - 8)}" fill="${C.dim}" font-size="11">${fmtDate(days[0].day)}</text>
-  <text x="${(W - pad.r).toFixed(1)}" y="${(H - 8)}" text-anchor="end" fill="${C.dim}" font-size="11">${fmtDate(days[days.length - 1].day)}</text>
+  <path d="${line}" fill="none" stroke="${C.accent}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="3.5" fill="${C.ink}"/>
+  <text x="${pad.l}" y="${(H - 8)}" fill="${C.muted}" font-size="11">${fmtDate(days[0].day)}</text>
+  <text x="${(W - pad.r).toFixed(1)}" y="${(H - 8)}" text-anchor="end" fill="${C.muted}" font-size="11">${fmtDate(days[days.length - 1].day)}</text>
 </svg>
 `;
 

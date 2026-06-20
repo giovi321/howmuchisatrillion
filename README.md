@@ -5,16 +5,7 @@ continuous camera flight from a single euro-million to the edge of human
 comprehension — built to fix the broken intuition that puts "a billion"
 halfway between a million and a trillion. (It sits 0.1% of the way.)
 
-## Stats
-
-![Visitors](https://howmuchisatrillion.goatcounter.com/counter/TOTAL.png)
-
 ![Visits over the last 90 days](assets/visits.svg)
-
-Live count from GoatCounter (no tracking cookies, no personal data). The graph is
-refreshed daily by the [`Update visit stats`](.github/workflows/stats.yml) workflow,
-which renders [`scripts/stats-chart.mjs`](scripts/stats-chart.mjs) from the GoatCounter
-API. Full interactive dashboard: <https://howmuchisatrillion.goatcounter.com>.
 
 **Hosting:** self-hosted. `npm run build` produces a fully static `dist/`
 (no server-side anything) — point any web server at it. Every push to `main`
