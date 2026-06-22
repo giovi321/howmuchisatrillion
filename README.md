@@ -57,6 +57,25 @@ npm run preview    # serve the build
 node shots.mjs     # screenshot every scene headlessly (needs preview running)
 ```
 
+## Visit stats
+
+The chart at the top is real traffic. A daily GitHub Action
+(`.github/workflows/stats.yml`) runs `scripts/stats-chart.mjs`, which pulls the
+last 90 days of whole-site visits from the
+[GoatCounter](https://www.goatcounter.com) API and renders `assets/visits.svg`
+(zero dependencies, dark palette). When the SVG changes it's committed back to
+`main` with `[skip ci]`.
+
+Setup is one repo secret, `GOATCOUNTER_API_TOKEN`. The script retries transient
+GoatCounter failures (404/429/5xx, dropped connections) a few times; if the API
+stays down it skips the run rather than failing the workflow — the committed
+chart just stays at its last-known-good state. A missing or rejected token
+fails loudly so a real break gets noticed. Run it locally with:
+
+```sh
+GOATCOUNTER_API_TOKEN=<token> node scripts/stats-chart.mjs
+```
+
 ## Numbers
 
 1-euro-cent thickness 1.67 mm (ECB) · Earth–Moon 384,400 km · median European
