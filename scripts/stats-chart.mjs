@@ -29,62 +29,92 @@ const start = new Date(end);
 start.setUTCDate(start.getUTCDate() - (DAYS - 1));
 
 const url = `${SITE}/api/v0/stats/total?start=${ymd(start)}&end=${ymd(end)}`;
-const res = await fetch(url, {
-  headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-});
-if (!res.ok) {
-  console.error(`GoatCounter API ${res.status}: ${await res.text()}`);
-  process.exit(1);
+
+// GoatCounter's hosted API occasionally returns a transient 404/5xx or drops the
+// connection, which fails the daily job for no real reason. Retry a few times
+// before giving up; treat auth/other client errors as real and fail loudly.
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const TRANSIENT = new Set([404, 408, 425, 429, 500, 502, 503, 504]);
+const MAX_TRIES = 5;
+
+// Thrown for non-transient errors (bad token, malformed request) so the caller
+// can fail the workflow. A null return means "transient outage, skip this run".
+class FatalApiError extends Error {}
+
+async function fetchStats() {
+  for (let attempt = 1; attempt <= MAX_TRIES; attempt++) {
+    let info;
+    try {
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      });
+      if (res.ok) return await res.json();
+      info = `${res.status}: ${await res.text()}`;
+      // Auth (401/403) or other non-transient client errors won't fix
+      // themselves on retry — surface them as a hard failure.
+      if (!TRANSIENT.has(res.status)) throw new FatalApiError(`GoatCounter API ${info}`);
+    } catch (err) {
+      if (err instanceof FatalApiError) throw err;
+      info = `network error: ${err.message}`;
+    }
+    if (attempt < MAX_TRIES) {
+      console.warn(`GoatCounter API ${info} (attempt ${attempt}/${MAX_TRIES}), retrying…`);
+      await sleep(attempt * 3000);
+    }
+  }
+  // A transient outage outlasted our retries.
+  return null;
 }
-const data = await res.json();
 
-// /stats/total returns stats[] = [{ day: 'YYYY-MM-DD', daily: N }, ...]
-const byDay = new Map((data.stats ?? []).map((s) => [s.day, s.daily ?? 0]));
-const days = [];
-for (let i = 0; i < DAYS; i++) {
-  const d = new Date(start);
-  d.setUTCDate(start.getUTCDate() + i);
-  const key = ymd(d);
-  days.push({ day: key, value: byDay.get(key) ?? 0 });
-}
+// Builds the cosmic-dark SVG from the API payload and writes it to OUT.
+async function renderChart(data) {
+  // /stats/total returns stats[] = [{ day: 'YYYY-MM-DD', daily: N }, ...]
+  const byDay = new Map((data.stats ?? []).map((s) => [s.day, s.daily ?? 0]));
+  const days = [];
+  for (let i = 0; i < DAYS; i++) {
+    const d = new Date(start);
+    d.setUTCDate(start.getUTCDate() + i);
+    const key = ymd(d);
+    days.push({ day: key, value: byDay.get(key) ?? 0 });
+  }
 
-const total = days.reduce((a, b) => a + b.value, 0);
-const peak = Math.max(1, ...days.map((d) => d.value));
-const last = days[days.length - 1].value;
+  const total = days.reduce((a, b) => a + b.value, 0);
+  const peak = Math.max(1, ...days.map((d) => d.value));
+  const last = days[days.length - 1].value;
 
-// geometry — extra top room so the title clears the top gridline
-const W = 820, H = 210;
-const pad = { t: 34, r: 16, b: 26, l: 16 };
-const iw = W - pad.l - pad.r;
-const ih = H - pad.t - pad.b;
-const x = (i) => pad.l + (i / (days.length - 1)) * iw;
-const y = (v) => pad.t + ih - (v / peak) * ih;
+  // geometry — extra top room so the title clears the top gridline
+  const W = 820, H = 210;
+  const pad = { t: 34, r: 16, b: 26, l: 16 };
+  const iw = W - pad.l - pad.r;
+  const ih = H - pad.t - pad.b;
+  const x = (i) => pad.l + (i / (days.length - 1)) * iw;
+  const y = (v) => pad.t + ih - (v / peak) * ih;
 
-const line = days.map((d, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(d.value).toFixed(1)}`).join(' ');
-const area = `M${x(0).toFixed(1)},${(pad.t + ih).toFixed(1)} ` +
-  days.map((d, i) => `L${x(i).toFixed(1)},${y(d.value).toFixed(1)}`).join(' ') +
-  ` L${x(days.length - 1).toFixed(1)},${(pad.t + ih).toFixed(1)} Z`;
+  const line = days.map((d, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(d.value).toFixed(1)}`).join(' ');
+  const area = `M${x(0).toFixed(1)},${(pad.t + ih).toFixed(1)} ` +
+    days.map((d, i) => `L${x(i).toFixed(1)},${y(d.value).toFixed(1)}`).join(' ') +
+    ` L${x(days.length - 1).toFixed(1)},${(pad.t + ih).toFixed(1)} Z`;
 
-// 3 horizontal gridlines + value labels (0, mid, peak)
-const grid = [0, 0.5, 1].map((f) => {
-  const gy = pad.t + ih - f * ih;
-  const val = Math.round(f * peak).toLocaleString('en-US');
-  return `<line x1="${pad.l}" y1="${gy.toFixed(1)}" x2="${(W - pad.r).toFixed(1)}" y2="${gy.toFixed(1)}" stroke="${C.grid}"/>` +
-    `<text x="${(W - pad.r).toFixed(1)}" y="${(gy - 4).toFixed(1)}" text-anchor="end" fill="${C.muted}" font-size="11">${val}</text>`;
-}).join('');
+  // 3 horizontal gridlines + value labels (0, mid, peak)
+  const grid = [0, 0.5, 1].map((f) => {
+    const gy = pad.t + ih - f * ih;
+    const val = Math.round(f * peak).toLocaleString('en-US');
+    return `<line x1="${pad.l}" y1="${gy.toFixed(1)}" x2="${(W - pad.r).toFixed(1)}" y2="${gy.toFixed(1)}" stroke="${C.grid}"/>` +
+      `<text x="${(W - pad.r).toFixed(1)}" y="${(gy - 4).toFixed(1)}" text-anchor="end" fill="${C.muted}" font-size="11">${val}</text>`;
+  }).join('');
 
-const lastX = x(days.length - 1), lastY = y(last);
-const fmtDate = (s) => new Date(s + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  const lastX = x(days.length - 1), lastY = y(last);
+  const fmtDate = (s) => new Date(s + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 
-// evenly spaced date ticks along the x-axis (edges anchored inward so they don't clip)
-const TICKS = 6;
-const xticks = Array.from({ length: TICKS }, (_, k) => {
-  const i = Math.round((k / (TICKS - 1)) * (days.length - 1));
-  const anchor = k === 0 ? 'start' : k === TICKS - 1 ? 'end' : 'middle';
-  return `<text x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="${anchor}" fill="${C.muted}" font-size="11">${fmtDate(days[i].day)}</text>`;
-}).join('');
+  // evenly spaced date ticks along the x-axis (edges anchored inward so they don't clip)
+  const TICKS = 6;
+  const xticks = Array.from({ length: TICKS }, (_, k) => {
+    const i = Math.round((k / (TICKS - 1)) * (days.length - 1));
+    const anchor = k === 0 ? 'start' : k === TICKS - 1 ? 'end' : 'middle';
+    return `<text x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="${anchor}" fill="${C.muted}" font-size="11">${fmtDate(days[i].day)}</text>`;
+  }).join('');
 
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="'Geist Mono',ui-monospace,monospace" role="img" aria-label="Visits over the last ${DAYS} days: ${total.toLocaleString('en-US')} total">
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="'Geist Mono',ui-monospace,monospace" role="img" aria-label="Visits over the last ${DAYS} days: ${total.toLocaleString('en-US')} total">
   <defs>
     <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="${C.accent}" stop-opacity="0.30"/>
@@ -101,6 +131,23 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" 
 </svg>
 `;
 
-await mkdir(dirname(OUT), { recursive: true });
-await writeFile(OUT, svg);
-console.log(`Wrote ${OUT} — ${total.toLocaleString('en-US')} visits over ${DAYS} days (peak ${peak}/day).`);
+  await mkdir(dirname(OUT), { recursive: true });
+  await writeFile(OUT, svg);
+  console.log(`Wrote ${OUT} — ${total.toLocaleString('en-US')} visits over ${DAYS} days (peak ${peak}/day).`);
+}
+
+let data;
+try {
+  data = await fetchStats();
+} catch (err) {
+  // Non-transient error (e.g. bad token): fail the workflow.
+  console.error(err.message);
+  process.exitCode = 1;
+}
+if (data) {
+  await renderChart(data);
+} else if (data === null) {
+  // Transient outage outlasted our retries: skip this run rather than failing
+  // the workflow; the committed chart stays at its last-known-good state.
+  console.warn(`GoatCounter API unavailable after ${MAX_TRIES} tries; skipping update.`);
+}
